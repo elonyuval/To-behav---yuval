@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>יום אהבה 💕</title>
+<style>
+  :root{
+    --pink1:#ff5f96;
+    --pink2:#ff2e63;
+    --pink3:#c81d5b;
+    --gold:#ffd9a0;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family:'Segoe UI', 'Arial Hebrew', Arial, sans-serif;
+    background:linear-gradient(160deg,var(--pink1),var(--pink2) 55%,var(--pink3));
+    overflow-x:hidden;
+    color:#fff;
+  }
+  #app{
+    position:relative;
+    min-height:100vh;
+    width:100%;
+    overflow:hidden;
+  }
+  .hearts-bg{
+    position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+  }
+  .heart{
+    position:absolute;
+    bottom:-10%;
+    font-size:20px;
+    opacity:.55;
+    animation:floatUp linear infinite;
+    filter:drop-shadow(0 0 6px rgba(255,255,255,.3));
+  }
+  @keyframes floatUp{
+    0%{ transform:translateY(0) translateX(0) rotate(0deg); opacity:0;}
+    10%{opacity:.6;}
+    90%{opacity:.5;}
+    100%{ transform:translateY(-110vh) translateX(20px) rotate(25deg); opacity:0;}
+  }
+
+  .screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:32px 20px;
+    text-align:center;
+    opacity:0;
+    pointer-events:none;
+    transform:translateY(18px) scale(.98);
+    transition:opacity .5s ease, transform .5s ease;
+    z-index:1;
+  }
+  .screen.active{
+    opacity:1;
+    pointer-events:auto;
+    transform:translateY(0) scale(1);
+    position:relative;
+  }
+
+  .glow-title{
+    font-size:1.9rem;
+    font-weight:700;
+    line-height:1.5;
+    text-shadow:0 2px 18px rgba(255,255,255,.35);
+    max-width:520px;
+  }
+  .sub{
+    margin-top:14px;
+    font-size:1.05rem;
+    opacity:.9;
+    max-width:440px;
+    line-height:1.6;
+  }
+
+  .btn{
+    border:none;
+    border-radius:999px;
+    padding:16px 38px;
+    font-size:1.1rem;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    transition:transform .15s ease, box-shadow .15s ease;
+    font-family:inherit;
+  }
+  .btn:active{ transform:scale(.95); }
+  .btn-yes{
+    background:linear-gradient(135deg,var(--gold),#ffb347);
+    color:#7a3b00;
+    margin-top:40px;
+  }
+  .btn-yes:hover{ transform:scale(1.05); box-shadow:0 10px 30px rgba(0,0,0,.3);}
+  .btn-no{
+    position:absolute;
+    background:rgba(255,255,255,.18);
+    color:#fff;
+    border:2px solid rgba(255,255,255,.6);
+    padding:14px 30px;
+    font-size:1rem;
+    transition:top .35s ease, left .35s ease, transform .2s ease;
+  }
+
+  .question-buttons{
+    position:relative;
+    width:100%;
+    max-width:420px;
+    height:220px;
+    margin-top:20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* Gift box screen */
+  .gift-wrap{ position:relative; width:220px; height:200px; margin-top:10px; cursor:pointer; }
+  .gift-box{
+    position:absolute; bottom:0; width:220px; height:130px;
+    background:linear-gradient(135deg,#ff8fb3,#ff4d7e);
+    border-radius:14px;
+    box-shadow:0 12px 30px rgba(0,0,0,.3);
+    transition:transform .4s ease;
+  }
+  .gift-box::before, .gift-box::after{
+    content:"";
+    position:absolute;
+    background:var(--gold);
+  }
+  .gift-box::before{ width:26px; top:0; bottom:0; left:50%; transform:translateX(-50%); }
+  .gift-box::after{ height:26px; left:0; right:0; top:50%; transform:translateY(-50%); }
+  .gift-lid{
+    position:absolute; top:60px; width:236px; height:46px; right:-8px;
+    background:linear-gradient(135deg,#ff6f9c,#ff2e63);
+    border-radius:12px;
+    box-shadow:0 8px 18px rgba(0,0,0,.28);
+    transition:transform .6s cubic-bezier(.34,1.56,.64,1), opacity .4s ease;
+    transform-origin:left center;
+    z-index:3;
+  }
+  .gift-lid::before{
+    content:"";
+    position:absolute;
+    width:26px; height:70px; background:var(--gold);
+    left:50%; top:-14px; transform:translateX(-50%);
+    border-radius:6px 6px 0 0;
+  }
+  .gift-wrap.opened .gift-lid{
+    transform:translateY(-90px) rotate(-35deg);
+    opacity:0;
+  }
+  .gift-wrap.opened .gift-box{ transform:translateY(6px); }
+  .gift-wrap:not(.opened):active .gift-box{ transform:scale(.96); }
+
+  .flowers{
+    position:absolute; inset:0; pointer-events:none;
+  }
+  .flower{
+    position:absolute;
+    bottom:40%;
+    left:50%;
+    font-size:26px;
+    opacity:0;
+    transform:translate(-50%,0) scale(.4);
+  }
+  .gift-wrap.opened .flower{
+    animation:bloom 1s cubic-bezier(.2,.8,.3,1) forwards;
+  }
+  @keyframes bloom{
+    0%{ opacity:0; transform:translate(-50%,0) scale(.3) rotate(0deg); }
+    60%{ opacity:1; }
+    100%{ opacity:1; transform:translate(var(--tx),var(--ty)) scale(1) rotate(var(--tr)); }
+  }
+
+  .gift-msg{
+    margin-top:24px;
+    max-width:420px;
+    font-size:1.15rem;
+    line-height:1.7;
+    opacity:0;
+    transform:translateY(10px);
+    transition:opacity .6s ease .3s, transform .6s ease .3s;
+  }
+  .gift-msg.show{ opacity:1; transform:translateY(0); }
+  .hint{
+    margin-top:10px;
+    font-size:.85rem;
+    opacity:.75;
+  }
+
+  /* Choice cards */
+  .cards{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-top:26px;
+    max-width:460px;
+  }
+  .card{
+    background:rgba(255,255,255,.12);
+    border:2px solid rgba(255,255,255,.35);
+    border-radius:18px;
+    padding:20px 18px;
+    width:130px;
+    cursor:pointer;
+    transition:transform .2s ease, background .2s ease, border-color .2s ease;
+  }
+  .card:hover{ transform:translateY(-4px); background:rgba(255,255,255,.2); }
+  .card.selected{
+    background:linear-gradient(135deg,var(--gold),#ffb347);
+    border-color:transparent;
+    color:#7a3b00;
+    transform:translateY(-4px) scale(1.04);
+    box-shadow:0 10px 26px rgba(0,0,0,.3);
+  }
+  .card .emoji{ font-size:2.2rem; display:block; margin-bottom:8px; }
+  .card .label{ font-weight:700; font-size:1rem; }
+
+  .next-btn{
+    margin-top:32px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .4s ease, transform .4s ease;
+    transform:translateY(8px);
+  }
+  .next-btn.show{ opacity:1; pointer-events:auto; transform:translateY(0); }
+
+  /* Date picker */
+  .cal{
+    margin-top:22px;
+    background:rgba(255,255,255,.12);
+    border-radius:20px;
+    padding:18px;
+    max-width:340px;
+    width:100%;
+  }
+  .cal-header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px; font-weight:700;
+  }
+  .cal-nav{
+    background:rgba(255,255,255,.2); border:none; color:#fff;
+    width:32px; height:32px; border-radius:50%; font-size:1rem; cursor:pointer;
+  }
+  .cal-grid{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:6px;
+  }
+  .cal-dow{ font-size:.75rem; opacity:.7; padding:4px 0; }
+  .cal-day{
+    aspect-ratio:1; display:flex; align-items:center; justify-content:center;
+    border-radius:50%; font-size:.9rem; cursor:pointer; transition:background .2s,transform .15s;
+  }
+  .cal-day.disabled{ opacity:.25; pointer-events:none; }
+  .cal-day:not(.disabled):hover{ background:rgba(255,255,255,.25); }
+  .cal-day.selected{
+    background:linear-gradient(135deg,var(--gold),#ffb347); color:#7a3b00; font-weight:700;
+    transform:scale(1.08);
+  }
+  .cal-day.empty{ visibility:hidden; }
+
+  /* Summary */
+  .summary-card{
+    background:rgba(255,255,255,.14);
+    border-radius:22px;
+    padding:28px 26px;
+    max-width:420px;
+    width:100%;
+    box-shadow:0 16px 40px rgba(0,0,0,.3);
+  }
+  .summary-row{
+    display:flex; align-items:center; gap:12px;
+    justify-content:center;
+    padding:10px 0;
+    font-size:1.05rem;
+    border-bottom:1px solid rgba(255,255,255,.2);
+  }
+  .summary-row:last-child{ border-bottom:none; }
+  .summary-row .ico{ font-size:1.4rem; }
+  .final-msg{
+    margin-top:22px;
+    font-size:1.15rem;
+    line-height:1.7;
+    max-width:420px;
+  }
+
+  .confetti-piece{
+    position:absolute; top:-5%; font-size:18px;
+    animation:fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform:translateY(115vh) rotate(360deg); opacity:.9; }
+  }
+
+  @media (max-width:380px){
+    .glow-title{ font-size:1.55rem; }
+    .card{ width:105px; padding:16px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hearts-bg" id="heartsBg"></div>
+
+<div id="app">
+
+  <!-- Screen 0: intro line 1 -->
+  <div class="screen active" id="screen-0">
+    <div class="glow-title">היי אהובה שלי... ❤️</div>
+    <div class="sub">יש לי משהו לשאול אותך</div>
+  </div>
+
+  <!-- Screen 1: intro line 2 -->
+  <div class="screen" id="screen-1">
+    <div class="glow-title">עוד מעט יום האהבה שלנו 🌸</div>
+    <div class="sub">והכנתי לך משהו קטן וכיף</div>
+  </div>
+
+  <!-- Screen 2: the question -->
+  <div class="screen" id="screen-2">
+    <div class="glow-title" id="questionTitle">רוצה לצאת איתי לדייט?</div>
+    <div class="question-buttons" id="qButtons">
+      <button class="btn btn-yes" id="yesBtn">כן, בשמחה 💕</button>
+      <button class="btn btn-no" id="noBtn">לא</button>
+    </div>
+  </div>
+
+  <!-- Screen 3: gift box -->
+  <div class="screen" id="screen-3">
+    <div class="glow-title">יש לי מתנה בשבילך 🎁</div>
+    <div class="gift-wrap" id="giftWrap">
+      <div class="gift-lid"></div>
+      <div class="gift-box"></div>
+      <div class="flowers" id="flowers"></div>
+    </div>
+    <div class="hint" id="giftHint">לחצי על הקופסה כדי לפתוח</div>
+    <div class="gift-msg" id="giftMsg">כל יום איתך מרגיש כמו מתנה חדשה.<br>אני כל כך אוהב אותך ❤️</div>
+    <button class="btn btn-yes next-btn" id="afterGiftBtn">המשך ✨</button>
+  </div>
+
+  <!-- Screen 4: food choice -->
+  <div class="screen" id="screen-4">
+    <div class="glow-title">על מה יש לך חשק?</div>
+    <div class="sub">תבחרי סוג אוכל לדייט שלנו</div>
+    <div class="cards" id="foodCards">
+      <div class="card" data-value="אסייתי" data-emoji="🍣">
+        <span class="emoji">🍣</span>
+        <span class="label">אסייתי</span>
+      </div>
+      <div class="card" data-value="איטלקי" data-emoji="🍝">
+        <span class="emoji">🍝</span>
+        <span class="label">איטלקי</span>
+      </div>
+      <div class="card" data-value="בשרי" data-emoji="🥩">
+        <span class="emoji">🥩</span>
+        <span class="label">בשרי</span>
+      </div>
+    </div>
+    <button class="btn btn-yes next-btn" id="foodNextBtn">המשך ✨</button>
+  </div>
+
+  <!-- Screen 5: date choice -->
+  <div class="screen" id="screen-5">
+    <div class="glow-title">מתי יוצא לך?</div>
+    <div class="sub">בחרי תאריך שנוח לך</div>
+    <div class="cal" id="calendar"></div>
+    <button class="btn btn-yes next-btn" id="dateNextBtn">סיימנו 💖</button>
+  </div>
+
+  <!-- Screen 6: summary -->
+  <div class="screen" id="screen-6">
+    <div class="glow-title">זה מה שמחכה לנו 💞</div>
+    <div class="summary-card">
+      <div class="summary-row"><span class="ico">🎁</span><span>מתנה קטנה שכבר קיבלת ❤️</span></div>
+      <div class="summary-row"><span class="ico" id="sumFoodIco">🍽️</span><span id="sumFood">האוכל שנבחר</span></div>
+      <div class="summary-row"><span class="ico">📅</span><span id="sumDate">התאריך שנבחר</span></div>
+    </div>
+    <div class="final-msg">
+      אז קבענו — <span id="sumFood2"></span> ב־<span id="sumDate2"></span>.<br>
+      תודה שאמרת כן. אני כבר סופר את הימים לדייט הכי טוב איתך 💕
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const HEB_MONTHS = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+  const HEB_DOW = ["א","ב","ג","ד","ה","ו","ש"];
+
+  const state = { food:null, foodEmoji:null, date:null };
+
+  // Floating hearts background
+  const heartsBg = document.getElementById('heartsBg');
+  const heartChars = ['❤️','💕','💗','🌸','💖'];
+  for(let i=0;i<16;i++){
+    const h = document.createElement('div');
+    h.className='heart';
+    h.textContent = heartChars[Math.floor(Math.random()*heartChars.length)];
+    h.style.left = Math.random()*100+'%';
+    h.style.animationDuration = (8+Math.random()*10)+'s';
+    h.style.animationDelay = (Math.random()*10)+'s';
+    h.style.fontSize = (14+Math.random()*18)+'px';
+    heartsBg.appendChild(h);
+  }
+
+  function goTo(index){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-'+index).classList.add('active');
+    if(index===5) renderCalendar();
+  }
+
+  // Intro sequence: 0 -> 1 -> 2 (auto)
+  setTimeout(()=>goTo(1), 2200);
+  setTimeout(()=>goTo(2), 4400);
+
+  // Question: no button evades
+  const noBtn = document.getElementById('noBtn');
+  const yesBtn = document.getElementById('yesBtn');
+  const qButtons = document.getElementById('qButtons');
+  const questionTitle = document.getElementById('questionTitle');
+  const noTexts = ["לא","בטוחה?","ברצינות?","חחח לא","נו באמת","עוד ניסיון?","תפסיקי לרדוף 😄","טוב תוותרי","זהו זה נגמר לך המזל","כן זה מה שנשאר"];
+  let noIndex = 0;
+
+  function moveNoButton(){
+    const w = qButtons.clientWidth, h = qButtons.clientHeight;
+    const btnW = noBtn.offsetWidth, btnH = noBtn.offsetHeight;
+    const maxX = Math.max(w - btnW, 10);
+    const maxY = Math.max(h - btnH, 10);
+    const x = Math.random()*maxX;
+    const y = Math.random()*maxY;
+    noBtn.style.left = x+'px';
+    noBtn.style.top = y+'px';
+    if(noIndex < noTexts.length-1){ noIndex++; }
+    noBtn.textContent = noTexts[noIndex];
+  }
+
+  // place initially
+  setTimeout(()=>{
+    noBtn.style.position='absolute';
+    noBtn.style.left = (qButtons.clientWidth/2 - noBtn.offsetWidth/2)+'px';
+    noBtn.style.top = '110px';
+  }, 50);
+
+  noBtn.addEventListener('mouseenter', moveNoButton);
+  noBtn.addEventListener('click', (e)=>{ e.preventDefault(); moveNoButton(); });
+  noBtn.addEventListener('touchstart', (e)=>{ e.preventDefault(); moveNoButton(); }, {passive:false});
+
+  yesBtn.addEventListener('click', ()=>{
+    goTo(3);
+  });
+
+  // Gift box
+  const giftWrap = document.getElementById('giftWrap');
+  const giftHint = document.getElementById('giftHint');
+  const giftMsg = document.getElementById('giftMsg');
+  const afterGiftBtn = document.getElementById('afterGiftBtn');
+  const flowersEl = document.getElementById('flowers');
+  const flowerEmojis = ['🌸','🌷','💐','🌹','✨'];
+  let giftOpened = false;
+
+  function openGift(){
+    if(giftOpened) return;
+    giftOpened = true;
+    giftWrap.classList.add('opened');
+    giftHint.style.display='none';
+    for(let i=0;i<14;i++){
+      const f = document.createElement('div');
+      f.className='flower';
+      f.textContent = flowerEmojis[Math.floor(Math.random()*flowerEmojis.length)];
+      const angle = (Math.random()*160-80) * Math.PI/180;
+      const dist = 60 + Math.random()*90;
+      const tx = Math.sin(angle)*dist;
+      const ty = -Math.abs(Math.cos(angle)*dist) - 40;
+      f.style.setProperty('--tx', tx+'px');
+      f.style.setProperty('--ty', ty+'px');
+      f.style.setProperty('--tr', (Math.random()*60-30)+'deg');
+      f.style.animationDelay = (Math.random()*0.3)+'s';
+      f.style.fontSize = (18+Math.random()*14)+'px';
+      flowersEl.appendChild(f);
+    }
+    setTimeout(()=>{
+      giftMsg.classList.add('show');
+      afterGiftBtn.classList.add('show');
+    }, 500);
+  }
+  giftWrap.addEventListener('click', openGift);
+
+  afterGiftBtn.addEventListener('click', ()=> goTo(4));
+
+  // Food cards
+  const foodCards = document.querySelectorAll('#foodCards .card');
+  const foodNextBtn = document.getElementById('foodNextBtn');
+  foodCards.forEach(card=>{
+    card.addEventListener('click', ()=>{
+      foodCards.forEach(c=>c.classList.remove('selected'));
+      card.classList.add('selected');
+      state.food = card.dataset.value;
+      state.foodEmoji = card.dataset.emoji;
+      foodNextBtn.classList.add('show');
+    });
+  });
+  foodNextBtn.addEventListener('click', ()=> goTo(5));
+
+  // Calendar
+  const calEl = document.getElementById('calendar');
+  const dateNextBtn = document.getElementById('dateNextBtn');
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let viewYear = today.getFullYear();
+  let viewMonth = today.getMonth();
+
+  function renderCalendar(){
+    calEl.innerHTML = '';
+    const header = document.createElement('div');
+    header.className='cal-header';
+    const prevBtn = document.createElement('button');
+    prevBtn.className='cal-nav'; prevBtn.textContent='‹';
+    const nextBtn = document.createElement('button');
+    nextBtn.className='cal-nav'; nextBtn.textContent='›';
+    const label = document.createElement('div');
+    label.textContent = HEB_MONTHS[viewMonth] + ' ' + viewYear;
+    prevBtn.addEventListener('click', ()=>{
+      viewMonth--; if(viewMonth<0){viewMonth=11; viewYear--;}
+      renderCalendar();
+    });
+    nextBtn.addEventListener('click', ()=>{
+      viewMonth++; if(viewMonth>11){viewMonth=0; viewYear++;}
+      renderCalendar();
+    });
+    header.appendChild(nextBtn);
+    header.appendChild(label);
+    header.appendChild(prevBtn);
+    calEl.appendChild(header);
+
+    const grid = document.createElement('div');
+    grid.className='cal-grid';
+    HEB_DOW.forEach(d=>{
+      const el = document.createElement('div');
+      el.className='cal-dow'; el.textContent=d;
+      grid.appendChild(el);
+    });
+
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const startOffset = firstDay.getDay();
+    const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+
+    for(let i=0;i<startOffset;i++){
+      const el = document.createElement('div');
+      el.className='cal-day empty';
+      grid.appendChild(el);
+    }
+    for(let d=1; d<=daysInMonth; d++){
+      const el = document.createElement('div');
+      el.className='cal-day';
+      el.textContent = d;
+      const thisDate = new Date(viewYear, viewMonth, d);
+      if(thisDate < today){
+        el.classList.add('disabled');
+      } else {
+        el.addEventListener('click', ()=>{
+          document.querySelectorAll('.cal-day.selected').forEach(x=>x.classList.remove('selected'));
+          el.classList.add('selected');
+          state.date = thisDate;
+          dateNextBtn.classList.add('show');
+        });
+      }
+      if(state.date && thisDate.getTime()===state.date.getTime()){
+        el.classList.add('selected');
+      }
+      grid.appendChild(el);
+    }
+    calEl.appendChild(grid);
+  }
+
+  dateNextBtn.addEventListener('click', ()=>{
+    document.getElementById('sumFoodIco').textContent = state.foodEmoji || '🍽️';
+    document.getElementById('sumFood').textContent = 'אוכל: ' + state.food;
+    const dateStr = state.date ? (state.date.getDate()+' ב'+HEB_MONTHS[state.date.getMonth()]+' '+state.date.getFullYear()) : '';
+    document.getElementById('sumDate').textContent = 'תאריך: ' + dateStr;
+    document.getElementById('sumFood2').textContent = state.food;
+    document.getElementById('sumDate2').textContent = dateStr;
+    goTo(6);
+    launchConfetti();
+  });
+
+  function launchConfetti(){
+    const app = document.getElementById('app');
+    const pieces = ['🎉','💕','🌸','✨','💐'];
+    for(let i=0;i<24;i++){
+      const c = document.createElement('div');
+      c.className='confetti-piece';
+      c.textContent = pieces[Math.floor(Math.random()*pieces.length)];
+      c.style.left = Math.random()*100+'%';
+      c.style.animationDuration = (2.5+Math.random()*2)+'s';
+      c.style.animationDelay = (Math.random()*0.6)+'s';
+      app.appendChild(c);
+      setTimeout(()=>c.remove(), 5500);
+    }
+  }
+})();
+</script>
+
+</body>
+</html>
