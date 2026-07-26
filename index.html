@@ -617,14 +617,15 @@
     if(pct < 100){
       setTimeout(tickLoading, 60);
     } else {
-      setTimeout(()=>goTo('0'), 350);
+      setTimeout(()=>{
+        goTo('0');
+        // Intro sequence: 0 -> 1 -> 2 (auto), chained off actual loading completion
+        setTimeout(()=>goTo('1'), 2200);
+        setTimeout(()=>goTo('2'), 4400);
+      }, 350);
     }
   }
   setTimeout(tickLoading, 250);
-
-  // Intro sequence: 0 -> 1 -> 2 (auto)
-  setTimeout(()=>{ if(document.getElementById('screen-0').classList.contains('active')) goTo('1'); }, 2600);
-  setTimeout(()=>{ if(document.getElementById('screen-1').classList.contains('active')) goTo('2'); }, 4900);
 
   // Question: no button evades across the whole screen
   const noBtn = document.getElementById('noBtn');
