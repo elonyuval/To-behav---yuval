@@ -343,6 +343,50 @@
     font-variant-numeric:tabular-nums;
   }
 
+  .heart-stack.shaking{
+    animation:heartShake .28s infinite;
+  }
+  @keyframes heartShake{
+    0%,100%{ transform:translate(0,0) rotate(0deg); }
+    20%{ transform:translate(calc(var(--shake-amt,0) * -1px), calc(var(--shake-amt,0) * 1px)) rotate(calc(var(--shake-amt,0) * -1deg)); }
+    40%{ transform:translate(calc(var(--shake-amt,0) * 1px), calc(var(--shake-amt,0) * -1px)) rotate(calc(var(--shake-amt,0) * 1deg)); }
+    60%{ transform:translate(calc(var(--shake-amt,0) * -1px), calc(var(--shake-amt,0) * -1px)) rotate(calc(var(--shake-amt,0) * -1deg)); }
+    80%{ transform:translate(calc(var(--shake-amt,0) * 1px), calc(var(--shake-amt,0) * 1px)) rotate(calc(var(--shake-amt,0) * 1deg)); }
+  }
+  .heart-stack.popping{
+    animation:heartPop .5s ease forwards;
+  }
+  @keyframes heartPop{
+    0%{ transform:scale(1); }
+    30%{ transform:scale(1.4); }
+    55%{ transform:scale(.15); opacity:1; }
+    100%{ transform:scale(0); opacity:0; }
+  }
+  .pop-particle{
+    position:absolute; left:50%; top:50%; font-size:22px;
+    animation:popFly .9s ease-out forwards;
+    pointer-events:none;
+  }
+  @keyframes popFly{
+    0%{ transform:translate(-50%,-50%) scale(.5) rotate(0deg); opacity:1; }
+    100%{ transform:translate(calc(-50% + var(--px)), calc(-50% + var(--py))) scale(1) rotate(var(--pr)); opacity:0; }
+  }
+  .pop-flash{
+    position:fixed; inset:0; background:#fff; opacity:.85; z-index:40;
+    animation:flashFade .4s ease forwards;
+    pointer-events:none;
+  }
+  @keyframes flashFade{ from{ opacity:.85; } to{ opacity:0; } }
+  .pop-msg{
+    margin-top:16px;
+    font-family:var(--font-display);
+    font-size:1.3rem;
+    opacity:0;
+    transform:translateY(8px) scale(.9);
+    transition:opacity .4s ease, transform .4s ease;
+  }
+  .pop-msg.show{ opacity:1; transform:translateY(0) scale(1); }
+
   /* Choice cards */
   .cards{
     display:flex;
@@ -479,21 +523,20 @@
     <div class="question-buttons reveal r2">
       <button class="btn btn-yes" id="yesBtn">כן, בשמחה 💕</button>
     </div>
-    <div class="scroll-hint" id="questionHint">↑ גללי למעלה כדי להמשיך</div>
   </section>
 
   <section class="panel locked" id="panel-excite">
     <div class="glow-title reveal">כמה את מתרגשת לדייט שלנו?</div>
     <div class="sub reveal r2">גררי את הלב ותראי 👇</div>
     <div class="excite-box reveal r3">
-      <div class="heart-stack">
+      <div class="heart-stack" id="heartStack">
         <div class="heart heart-bg"></div>
         <div class="heart heart-fill" id="heartFill"></div>
       </div>
       <input type="range" class="excite-slider" id="exciteSlider" min="0" max="100" value="62">
       <div class="excite-pct" id="excitePct">62%</div>
+      <div class="pop-msg" id="popMsg">בדיוק כמוני 💥</div>
     </div>
-    <div class="scroll-hint show">↑ גללי למעלה</div>
   </section>
 
   <section class="panel locked" id="panel-gift">
@@ -505,7 +548,6 @@
     </div>
     <div class="hint" id="giftHint">לחצי על הקופסה כדי לפתוח</div>
     <div class="gift-msg" id="giftMsg">כי את הפרח הכי יפה שראיתי 🌸</div>
-    <div class="scroll-hint" id="giftHintScroll">↑ גללי למעלה כדי להמשיך</div>
   </section>
 
   <section class="panel locked" id="panel-food">
@@ -525,14 +567,12 @@
         <span class="label">בשרי</span>
       </div>
     </div>
-    <div class="scroll-hint" id="foodHint">↑ גללי למעלה כדי להמשיך</div>
   </section>
 
   <section class="panel locked" id="panel-date">
     <div class="glow-title reveal">מתי יוצא לך?</div>
     <div class="sub reveal r2">בחרי תאריך שנוח לך</div>
     <div class="cal reveal r3" id="calendar"></div>
-    <div class="scroll-hint" id="dateHint">↑ גללי למעלה כדי להמשיך</div>
   </section>
 
   <section class="panel locked" id="panel-time">
@@ -544,7 +584,6 @@
       <div class="card time-card" data-value="19:00"><span class="emoji">🌆</span><span class="label">19:00</span></div>
       <div class="card time-card" data-value="21:00"><span class="emoji">🌙</span><span class="label">21:00</span></div>
     </div>
-    <div class="scroll-hint" id="timeHint">↑ גללי למעלה כדי לסיים</div>
   </section>
 
   <section class="panel locked" id="panel-summary">
@@ -588,16 +627,16 @@
 
   const scrollRoot = document.getElementById('scrollRoot');
 
-  function unlock(id){
+  function unlock(id, autoScroll){
     const el = document.getElementById('panel-'+id);
-    if(!el || !el.classList.contains('locked')) return;
-    el.classList.remove('locked');
-    el.classList.add('unlocked');
-  }
-
-  function showHint(elId){
-    const el = document.getElementById(elId);
-    if(el) el.classList.add('show');
+    if(!el) return;
+    if(el.classList.contains('locked')){
+      el.classList.remove('locked');
+      el.classList.add('unlocked');
+    }
+    if(autoScroll){
+      requestAnimationFrame(()=> el.scrollIntoView({behavior:'smooth'}));
+    }
   }
 
   // Reveal-on-scroll + track which panel is current (for the roaming no-button, calendar, confetti)
@@ -683,18 +722,66 @@
   window.addEventListener('resize', ()=>{ if(noBtn.style.display==='block') moveNoButton(false); });
 
   yesBtn.addEventListener('click', ()=>{
-    unlock('excite');
-    unlock('gift');
-    showHint('questionHint');
+    unlock('excite', true);
+    unlock('gift', false);
   });
 
   // Excitement meter
   const exciteSlider = document.getElementById('exciteSlider');
+  const heartStack = document.getElementById('heartStack');
   const heartFill = document.getElementById('heartFill');
   const excitePct = document.getElementById('excitePct');
+  const popMsg = document.getElementById('popMsg');
+  let hasPopped = false;
+
+  function flashScreen(){
+    const f = document.createElement('div');
+    f.className = 'pop-flash';
+    document.body.appendChild(f);
+    setTimeout(()=>f.remove(), 420);
+  }
+
+  function popHeart(){
+    heartStack.classList.remove('shaking');
+    heartStack.classList.add('popping');
+    flashScreen();
+    const burstEmojis = ['💥','❤️','💕','✨','💖'];
+    for(let i=0;i<18;i++){
+      const p = document.createElement('div');
+      p.className = 'pop-particle';
+      p.textContent = burstEmojis[Math.floor(Math.random()*burstEmojis.length)];
+      const angle = Math.random()*Math.PI*2;
+      const dist = 70+Math.random()*110;
+      p.style.setProperty('--px', Math.cos(angle)*dist+'px');
+      p.style.setProperty('--py', Math.sin(angle)*dist+'px');
+      p.style.setProperty('--pr', (Math.random()*360)+'deg');
+      p.style.animationDelay = (Math.random()*0.1)+'s';
+      p.style.fontSize = (18+Math.random()*10)+'px';
+      heartStack.appendChild(p);
+      setTimeout(()=>p.remove(), 1300);
+    }
+    popMsg.classList.add('show');
+    setTimeout(()=>{
+      unlock('gift', true);
+    }, 900);
+  }
+
   function updateExcite(v){
+    v = Number(v);
     heartFill.style.clipPath = `inset(${100-v}% 0 0 0)`;
     excitePct.textContent = v+'%';
+    if(hasPopped) return;
+    if(v >= 85 && v < 100){
+      const amt = ((v-85)/15*9)+1;
+      heartStack.style.setProperty('--shake-amt', amt);
+      heartStack.classList.add('shaking');
+    } else {
+      heartStack.classList.remove('shaking');
+    }
+    if(v >= 100){
+      hasPopped = true;
+      popHeart();
+    }
   }
   exciteSlider.addEventListener('input', e=>updateExcite(e.target.value));
   updateExcite(exciteSlider.value);
@@ -729,8 +816,7 @@
     }
     setTimeout(()=>{
       giftMsg.classList.add('show');
-      unlock('food');
-      showHint('giftHintScroll');
+      unlock('food', true);
     }, 550);
   }
   giftWrap.addEventListener('click', openGift);
@@ -743,8 +829,7 @@
       card.classList.add('selected');
       state.food = card.dataset.value;
       state.foodEmoji = card.dataset.emoji;
-      unlock('date');
-      showHint('foodHint');
+      unlock('date', true);
     });
   });
 
@@ -814,8 +899,7 @@
           document.querySelectorAll('.cal-day.selected').forEach(x=>x.classList.remove('selected'));
           el.classList.add('selected');
           state.date = thisDate;
-          unlock('time');
-          showHint('dateHint');
+          unlock('time', true);
         });
       }
       if(state.date && thisDate.getTime()===state.date.getTime()){
@@ -834,8 +918,7 @@
       card.classList.add('selected');
       state.time = card.dataset.value;
       fillSummary();
-      unlock('summary');
-      showHint('timeHint');
+      unlock('summary', true);
     });
   });
 
